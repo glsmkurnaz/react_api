@@ -1,25 +1,68 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter, HashRouter, Route, Routes } from "react-router-dom";
+import { connect } from "react-redux";
 
-function App() {
+import Home from "./pages/home";
+import Login from "./pages/login";
+import Register from "./pages/register";
+import Categories from "./pages/categories";
+import Services from "./pages/services";
+
+import Footer from "./components/footer";
+import Header from "./components/header";
+import useApi from "./hooks/useApi";
+import { SET_CATEGORIES } from "./redux/reducers/categoriesReducer";
+
+function App(props) {
+  console.log(">> APP PROPS", props);
+
+  const api = useApi();
+
+  if (props.categoriesState.initialized === false) {
+    api
+      .get(
+        "https://api.adoptez1artisan.com/public/categories/listMainCategories"
+      )
+      .then((response) => {
+        console.log(">> KATEGORI LISTESI CEVAP", response);
+
+        const action = {
+          type: SET_CATEGORIES,
+          payload: {
+            categories: response.data.data,
+          },
+        };
+
+        props.dispatch(action);
+      })
+      .catch((err) => {
+        console.error(">> KATEGORI LISTESI HATASI", err);
+      });
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="container py-3">
+      <Header />
+
+      <HashRouter>
+        <Routes>
+          <Route index element={<Home />} />
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+          <Route path="categories" element={<Categories />} />
+          <Route path="category/:slug" element={<Categories />} />
+          <Route path="services" element={<Services />} />
+        </Routes>
+      </HashRouter>
+
+      <Footer />
     </div>
   );
 }
 
-export default App;
+const mapStateToProps = (state) => {
+  return {
+    ...state,
+  };
+};
+
+export default connect(mapStateToProps)(App);
